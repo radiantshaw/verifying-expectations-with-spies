@@ -4,28 +4,41 @@ require "signup"
 describe Signup do
   describe "#save" do
     it "creates an account with one user" do
+      account = spy_on_account
+      spy_on_user
+
       signup = Signup.new(email: "user@example.com", account_name: "Example")
 
       result = signup.save
 
-      expect(Account.count).to eq(1)
-      expect(Account.last.name).to eq("Example")
-      expect(User.count).to eq(1)
-      expect(User.last.email).to eq("user@example.com")
-      expect(User.last.account).to eq(Account.last)
+      expect(Account).to have_received(:create!).with(name: "Example")
+      expect(User).to have_received(:create!).with(account: account, email: "user@example.com")
       expect(result).to be(true)
     end
   end
 
   describe "#user" do
     it "returns the user created by #save" do
+      user = double("user")
+      account = spy_on_account
+      spy_on_user(user)
+
       signup = Signup.new(email: "user@example.com", account_name: "Example")
       signup.save
 
       result = signup.user
 
-      expect(result.email).to eq("user@example.com")
-      expect(result.account.name).to eq("Example")
+      expect(result).to eq user
     end
+  end
+
+  def spy_on_account
+    account = double("account")
+    allow(Account).to receive(:create!).and_return(account)
+    account
+  end
+
+  def spy_on_user(user = double("user"))
+    allow(User).to receive(:create!).and_return(user)
   end
 end
